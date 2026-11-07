@@ -81,6 +81,25 @@ kubectl get nodes                # 3 nodos en estado Ready
 docker ps                        # ¡los "nodos" son contenedores!
 ```
 
+### Exportar el kubeconfig a un archivo propio
+
+El **kubeconfig** es el archivo que le dice a `kubectl` a qué cluster conectarse y con qué credenciales. k3d ya agregó el cluster a `~/.kube/config`, pero conviene tener también un archivo separado para este cluster. Así no se mezcla con otros clusters que uses:
+
+```bash
+k3d kubeconfig write crayones --output ~/.kube/crayones.yaml
+chmod 600 ~/.kube/crayones.yaml
+```
+
+Para usarlo:
+
+```bash
+export KUBECONFIG=~/.kube/crayones.yaml   # vale para la terminal actual
+kubectl get nodes
+unset KUBECONFIG                          # vuelve a usar ~/.kube/config
+```
+
+> ⚠️ Este archivo contiene un certificado con permisos de **administrador** del cluster: trátalo como una contraseña y no lo subas a ningún repositorio.
+
 Prueba también la imagen de la app, así queda descargada antes del taller:
 
 ```bash
