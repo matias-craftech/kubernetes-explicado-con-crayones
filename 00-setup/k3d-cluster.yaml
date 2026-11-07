@@ -1,0 +1,30 @@
+# Configuración del cluster local del taller.
+# Uso: k3d cluster create --config 00-setup/k3d-cluster.yaml
+apiVersion: k3d.io/v1alpha5
+kind: Simple
+metadata:
+  name: crayones          # Nombre del cluster. El contexto de kubectl será "k3d-crayones".
+servers: 1                # Nodos de control plane (API server, etcd, scheduler, controller manager)
+agents: 2                 # Nodos worker. 2 alcanzan para ver cómo se reparten los pods.
+
+# Fijamos la versión de Kubernetes para que todos tengan exactamente lo mismo,
+# sin importar qué versión de k3d instalaron. La imagen es multi-arquitectura (amd64 y arm64).
+image: rancher/k3s:v1.36.5-k3s1
+
+# Cada nodo de k3d es un contenedor de Docker. Para llegar desde tu máquina al cluster,
+# publicamos puertos en el contenedor "serverlb" (un balanceador que crea k3d).
+ports:
+  - port: 8080:80         # localhost:8080 -> puerto 80 del cluster -> Ingress (Traefik). Demo 2.
+    nodeFilters:
+      - loadbalancer
+  - port: 30080:30080     # localhost:30080 -> NodePort 30080. Demo 1.
+    nodeFilters:
+      - loadbalancer
+
+options:
+  k3d:
+    wait: true            # No devuelve el control hasta que los nodos estén listos
+    timeout: "180s"
+  kubeconfig:
+    updateDefaultKubeconfig: true   # Agrega el cluster a ~/.kube/config
+    switchCurrentContext: true      # y cambia kubectl a ese contexto

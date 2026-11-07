@@ -1,0 +1,23 @@
+# Un Pod es la unidad mínima que Kubernetes ejecuta: uno o más contenedores
+# que comparten red (misma IP) y almacenamiento.
+# Tip: si te cuesta leer un manifiesto, empieza por abajo (spec) y sube.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: saludo-suelto
+  namespace: demo-basicos
+  labels:
+    app: saludo-suelto      # Las labels son etiquetas clave:valor. Otros recursos las usan para "encontrar" pods.
+spec:
+  containers:
+    - name: app-saludo
+      image: ghcr.io/matias-craftech/kubernetes-explicado-con-crayones/app-saludo:v1
+      ports:
+        - containerPort: 8000   # Puerto en el que escucha la app dentro del contenedor
+      resources:
+        requests:               # Lo que el scheduler reserva para el pod al elegir nodo
+          cpu: 50m              # 50 milicores = 5% de un core
+          memory: 64Mi
+        limits:                 # El máximo que puede consumir
+          cpu: 200m
+          memory: 128Mi

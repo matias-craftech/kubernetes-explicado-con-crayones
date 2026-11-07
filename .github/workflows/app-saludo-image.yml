@@ -1,0 +1,88 @@
+# Construye la imagen de app-saludo para amd64 y arm64 y la publica en GitHub Container Registry.
+#
+# - Push a main (cambios en la app o en este workflow): build + push.
+# - Pull request: solo build, para validar que compila. No publica.
+# - Ejecución manual desde la pestaña Actions: build + push.
+#
+# Tags publicados:
+#   :v1          (APP_VERSION) el que usan los manifiestos de las demos
+#   :sha-<corto> trazabilidad: qué commit generó cada imagen
+#
+# Si un cambio en la app rompe compatibilidad con las demos, sube APP_VERSION (v2)
+# y actualiza los manifiestos, así quien ya usa :v1 no se ve afectado.
+#
+# Al publicar con GITHUB_TOKEN, el paquete hereda la visibilidad del repo (público).
+name: app-saludo image
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "apps/app-saludo/src/**"
+      - ".github/workflows/app-saludo-image.yml"
+  pull_request:
+    paths:
+      - "apps/app-saludo/src/**"
+      - ".github/workflows/app-saludo-image.yml"
+  workflow_dispatch:
+
+env:
+  IMAGE: ghcr.io/${{ github.repository }}/app-saludo
+  APP_VERSION: v1
+
+# Si se pushean dos commits seguidos, se cancela el build anterior.
+concurrency:
+  group: app-saludo-image-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write   # necesario para publicar en ghcr.io con GITHUB_TOKEN
+    steps:
+      - uses: actions/checkout@v7
+
+      # QEMU permite construir la variante arm64 en un runner amd64
+      - uses: docker/setup-qemu-action@v4
+      - uses: docker/setup-buildx-action@v4
+
+      - name: Login a GHCR
+        if: github.event_name != 'pull_request'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Calcular tags y labels
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=${{ env.APP_VERSION }}
+            type=sha
+
+      - name: Build (y push fuera de PRs)
+        uses: docker/build-push-action@v7
+        with:
+          context: apps/app-saludo/src
+          platforms: linux/amd64,linux/arm64
+          push: ${{ github.event_name != 'pull_request' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Resumen
+        if: github.event_name != 'pull_request'
+        run: |
+          {
+            echo "### Imagen publicada"
+            echo '```'
+            echo "${{ steps.meta.outputs.tags }}"
+            echo '```'
+            echo "Plataformas: linux/amd64, linux/arm64"
+          } >> "$GITHUB_STEP_SUMMARY"

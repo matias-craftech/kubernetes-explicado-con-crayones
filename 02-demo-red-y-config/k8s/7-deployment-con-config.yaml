@@ -1,0 +1,55 @@
+# El mismo Deployment del manifiesto 2, ahora leyendo configuración del ConfigMap y del Secret.
+# Al aplicarlo, cambia el "template" del pod -> Kubernetes hace un rolling update.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-saludo
+  namespace: demo-red-config
+  labels:
+    app: app-saludo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: app-saludo
+  template:
+    metadata:
+      labels:
+        app: app-saludo
+    spec:
+      containers:
+        - name: app-saludo
+          image: ghcr.io/matias-craftech/kubernetes-explicado-con-crayones/app-saludo:v1
+          ports:
+            - containerPort: 8000
+          env:
+            # Forma 1: una clave puntual del ConfigMap como variable de entorno
+            - name: ENG_MSG
+              valueFrom:
+                configMapKeyRef:
+                  name: app-saludo-config
+                  key: english_message
+            - name: COLOR
+              valueFrom:
+                configMapKeyRef:
+                  name: app-saludo-config
+                  key: color
+            # Le decimos a la app dónde va a encontrar el secreto montado
+            - name: SECRETS_PATH
+              value: /run/secrets/app-saludo/SECRET_MSG
+          volumeMounts:
+            # Forma 2: el Secret montado como archivos (una clave = un archivo)
+            - name: secreto
+              mountPath: /run/secrets/app-saludo
+              readOnly: true
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
+      volumes:
+        - name: secreto
+          secret:
+            secretName: app-saludo-secret

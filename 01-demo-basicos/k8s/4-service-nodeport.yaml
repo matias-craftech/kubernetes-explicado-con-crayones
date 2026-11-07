@@ -1,0 +1,18 @@
+# Los pods son efímeros: cada uno que se recrea tiene una IP nueva.
+# Un Service da un punto de acceso ESTABLE (nombre + IP fija) y reparte el tráfico
+# entre todos los pods que coincidan con su selector.
+#
+# Tipo NodePort: además, abre el mismo puerto (30000-32767) en TODOS los nodos del cluster.
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-saludo
+  namespace: demo-basicos
+spec:
+  type: NodePort
+  selector:
+    app: app-saludo       # Manda tráfico a los pods con esta label (los del Deployment)
+  ports:
+    - port: 80            # Puerto del Service dentro del cluster
+      targetPort: 8000    # Puerto del contenedor
+      nodePort: 30080     # Puerto en cada nodo. Lo publicamos en localhost:30080 (ver k3d-cluster.yaml)

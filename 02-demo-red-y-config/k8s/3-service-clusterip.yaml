@@ -1,0 +1,15 @@
+# ClusterIP (el tipo por defecto): el Service solo es accesible DESDE ADENTRO del cluster.
+# Otros pods lo encuentran por DNS:  app-saludo.demo-red-config.svc.cluster.local
+# Para exponerlo hacia afuera de forma prolija usamos un Ingress (siguiente manifiesto).
+apiVersion: v1
+kind: Service
+metadata:
+  name: app-saludo
+  namespace: demo-red-config
+spec:
+  type: ClusterIP
+  selector:
+    app: app-saludo
+  ports:
+    - port: 80
+      targetPort: 8000

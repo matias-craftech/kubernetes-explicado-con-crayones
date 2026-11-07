@@ -1,0 +1,30 @@
+# Mismo Deployment de la demo 1, en otro namespace. Todavía SIN configuración externa.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-saludo
+  namespace: demo-red-config
+  labels:
+    app: app-saludo
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: app-saludo
+  template:
+    metadata:
+      labels:
+        app: app-saludo
+    spec:
+      containers:
+        - name: app-saludo
+          image: ghcr.io/matias-craftech/kubernetes-explicado-con-crayones/app-saludo:v1
+          ports:
+            - containerPort: 8000
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi

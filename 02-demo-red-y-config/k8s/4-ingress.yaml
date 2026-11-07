@@ -1,0 +1,23 @@
+# Un Ingress define reglas HTTP: "si llega un pedido para ESTE host/ruta, envíalo a ESTE Service".
+# Las reglas las ejecuta un Ingress Controller. k3s trae Traefik instalado por defecto.
+#
+# Usamos hosts *.localhost: el navegador y curl los resuelven a 127.0.0.1 sin tocar /etc/hosts.
+# Camino: localhost:8080 -> serverlb de k3d -> puerto 80 del cluster -> Traefik -> Service -> Pod
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: app-saludo
+  namespace: demo-red-config
+spec:
+  ingressClassName: traefik
+  rules:
+    - host: saludo.localhost          # Regla por nombre de host
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: app-saludo      # Service ClusterIP del manifiesto 3
+                port:
+                  number: 80

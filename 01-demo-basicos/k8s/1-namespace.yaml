@@ -1,0 +1,6 @@
+# Un Namespace es una "carpeta" lógica dentro del cluster.
+# Separa recursos por proyecto o equipo, y permite repetir nombres en namespaces distintos.
+apiVersion: v1          # Versión de la API de Kubernetes que define este tipo de recurso
+kind: Namespace         # Tipo de recurso
+metadata:
+  name: demo-basicos    # Nombre del namespace que creamos

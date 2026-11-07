@@ -1,0 +1,10 @@
+# ConfigMap: configuración NO sensible, separada del código y de la imagen.
+# La misma imagen puede correr en dev y en prod con ConfigMaps distintos.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: app-saludo-config
+  namespace: demo-red-config
+data:
+  english_message: "Hello everyone! This message comes from a ConfigMap."
+  color: "naranja"

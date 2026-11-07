@@ -1,0 +1,35 @@
+# Un Deployment declara un ESTADO DESEADO: "quiero 3 copias de este pod".
+# Kubernetes crea un ReplicaSet que se encarga de que siempre haya 3 pods corriendo:
+# si uno muere, crea otro. Deployment -> ReplicaSet -> Pods.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: app-saludo
+  namespace: demo-basicos
+  labels:
+    app: app-saludo
+spec:
+  replicas: 3                     # Estado deseado: cantidad de pods
+  selector:
+    matchLabels:
+      app: app-saludo             # Qué pods "le pertenecen" a este Deployment...
+  template:                       # ...y a partir de acá, el molde de cada pod
+    metadata:
+      labels:
+        app: app-saludo           # ...tiene que coincidir con el selector de arriba
+    spec:
+      containers:
+        - name: app-saludo
+          image: ghcr.io/matias-craftech/kubernetes-explicado-con-crayones/app-saludo:v1
+          ports:
+            - containerPort: 8000
+          env:
+            - name: COLOR
+              value: "azul"       # Lo cambiamos en vivo para ver un rolling update (ruta /color)
+          resources:
+            requests:
+              cpu: 50m
+              memory: 64Mi
+            limits:
+              cpu: 200m
+              memory: 128Mi
